@@ -8,11 +8,11 @@ import (
 	"github.com/maliur/sodaville/database"
 )
 
-type InternalCommand struct {
-	security bool
-	name     string
-	execute  func(message string) (string, error)
-}
+// type InternalCommand struct {
+// 	security bool
+// 	name     string
+// 	execute  func(message string) (string, error)
+// }
 
 // sqlite> PRAGMA table_info(command);
 // 0|id|INTEGER|1||1
