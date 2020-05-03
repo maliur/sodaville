@@ -50,5 +50,6 @@ tags
 .envrc
 *.db
 *.db-journal
-./sodville
+./sodaville
+sodaville
 # End of https://www.gitignore.io/api/go,vim
