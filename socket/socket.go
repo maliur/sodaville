@@ -1,14 +1,12 @@
 package socket
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/maliur/sodaville/command"
 )
 
 type Socket struct {
@@ -17,26 +15,20 @@ type Socket struct {
 	RequestHeader   http.Header
 	Conn            *websocket.Conn
 	WebsocketDialer *websocket.Dialer
+	IncomingHandler func(message string)
 	sendMu          *sync.Mutex
 	receiveMu       *sync.Mutex
-	BotName         string
-	ChannelName     string
-	OAuth           string
-	Prefix          string
 }
 
-func NewSocket(logger *log.Logger, botName, channelName, url, oauth, prefix string) *Socket {
+func NewSocket(logger *log.Logger, url string, incomingHandler func(message string)) *Socket {
 	return &Socket{
 		Logger:          logger,
 		Url:             url,
 		RequestHeader:   http.Header{},
 		WebsocketDialer: &websocket.Dialer{},
+		IncomingHandler: incomingHandler,
 		sendMu:          &sync.Mutex{},
 		receiveMu:       &sync.Mutex{},
-		BotName:         botName,
-		ChannelName:     channelName,
-		OAuth:           oauth,
-		Prefix:          prefix,
 	}
 }
 
@@ -49,7 +41,7 @@ func (s *Socket) Connect() {
 		return
 	}
 
-	s.Logger.Println("connected to twitch!")
+	s.Logger.Println("Connecting...")
 
 	s.Conn.SetPingHandler(func(appData string) error {
 		return s.send(websocket.TextMessage, []byte("PONG"))
@@ -58,9 +50,6 @@ func (s *Socket) Connect() {
 	s.Conn.SetPongHandler(func(appData string) error {
 		return s.send(websocket.TextMessage, []byte("PING"))
 	})
-
-	s.connectToChannel()
-	command.InitCommands()
 
 	go func() {
 		for {
@@ -80,32 +69,16 @@ func (s *Socket) Connect() {
 
 					if strings.Contains(message, "PING") {
 						s.SendTextMessage("PONG")
+						continue
 					}
 
-					res, err := command.Run(message, s.Prefix)
-					if err != nil {
-						s.Logger.Printf("%v", err)
-					}
-
-					if len(res) > 0 {
-						s.SendMessageToChannel(res)
-					}
+					s.IncomingHandler(message)
 				}
 			case websocket.BinaryMessage:
 				s.Logger.Println("NOT IMPLEMENTED")
 			}
 		}
 	}()
-}
-
-func (s *Socket) connectToChannel() {
-	s.SendTextMessage(fmt.Sprintf("PASS oauth:%s", s.OAuth))
-	s.SendTextMessage(fmt.Sprintf("NICK %s", s.BotName))
-	s.SendTextMessage(fmt.Sprintf("JOIN #%s", s.ChannelName))
-}
-
-func (s *Socket) SendMessageToChannel(message string) {
-	s.SendTextMessage(fmt.Sprintf("PRIVMSG #%s :%s", s.ChannelName, message))
 }
 
 func (s *Socket) SendTextMessage(message string) {

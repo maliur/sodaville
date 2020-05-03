@@ -49,4 +49,5 @@ tags
 
 .envrc
 *.db
+*.db-journal
 # End of https://www.gitignore.io/api/go,vim
