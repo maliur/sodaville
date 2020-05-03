@@ -1,3 +1,4 @@
+[![Actions Status](https://github.com/maliur/sodaville/workflows/Sodaville/badge.svg)](https://github.com/maliur/sodaville/actions)
 ```
             ███████╗ ██████╗ ██████╗  █████╗ ██╗   ██╗██╗██╗     ██╗     ███████╗
             ██╔════╝██╔═══██╗██╔══██╗██╔══██╗██║   ██║██║██║     ██║     ██╔════╝
