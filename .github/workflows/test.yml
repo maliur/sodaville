@@ -1,4 +1,4 @@
-name: build
+name: tests
 
 on:
   push:
@@ -29,11 +29,6 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.26.0
 
-    - name: Lint
-      run: golangci-lint run ./...
-
-    - name: Build
-      working-directory: ./cmd/bot
-      run: go build -v .
+    - name: Test
+      run: go test -v ./...
