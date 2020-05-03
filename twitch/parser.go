@@ -8,13 +8,21 @@ import (
 type IRCEvent struct {
 	User   string
 	Cmd    string
+	NewCmd string
 	Action string
 	Arg    string
 }
 
 func cmdFromMessage(message string) string {
-	cmdRegex := regexp.MustCompile(`:\$[a-z]+$`)
-	return strings.TrimPrefix(cmdRegex.FindString(message), ":")
+	cmdRegex := regexp.MustCompile(`:\$\b[a-z]+(\b$|\s)`)
+	match := cmdRegex.FindString(message)
+	return strings.TrimSpace(strings.TrimPrefix(match, ":"))
+}
+
+func newCmdFromMessage(message string) string {
+	cmdRegex := regexp.MustCompile(`[^:]\$\b[a-z]+(\b$|\s)`)
+	match := cmdRegex.FindString(message)
+	return strings.TrimSpace(match)
 }
 
 func userFromMessage(message string) string {
@@ -46,6 +54,7 @@ func ParseIRCEvent(message string) *IRCEvent {
 	return &IRCEvent{
 		User:   userFromMessage(message),
 		Cmd:    cmdFromMessage(message),
+		NewCmd: newCmdFromMessage(message),
 		Action: actionFromMessage(message),
 		Arg:    argFromMessage(message),
 	}

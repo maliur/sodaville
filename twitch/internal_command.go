@@ -3,7 +3,6 @@ package twitch
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/maliur/sodaville/database"
@@ -17,7 +16,7 @@ import (
 
 func addCmd(event *IRCEvent, db *database.Database) string {
 	// TODO: Add command to DB
-	return fmt.Sprintf("command %s added", event.Cmd)
+	return fmt.Sprintf("command %s added", event.NewCmd)
 }
 
 func delCmd(event *IRCEvent, db *database.Database) string {

@@ -29,6 +29,7 @@ func TestCmdFromMessage(t *testing.T) {
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$helloWorld", ""},
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$HeLlo", ""},
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$hello-world", ""},
+		{":maliur!maliur@maliur.tmi.twitch.tv PRIVMSG #maliur :$hello", "$hello"},
 	}
 
 	for _, m := range messages {
