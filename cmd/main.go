@@ -18,9 +18,10 @@ func main() {
 
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 
+	logger.Println("[BOOT] connecting to database")
 	conn, err := sql.Open("sqlite3", "./sodaville.db")
 	if err != nil {
-		logger.Fatalf("could not connect to database: %v", err)
+		logger.Fatalf("[BOOT] could not connect to database: %v", err)
 	}
 	defer conn.Close()
 
@@ -30,10 +31,9 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
+	logger.Println("[BOOT] connecting to twitch chat")
 	chat.Connect()
 
-	// TODO: Might want to look into this, with a for { select {} } loop golangci-lint will complain.
-	// S1000: should use for range instead of for { select {} } (gosimple)
 	for {
 		<-interrupt
 		log.Println("interrupt")
