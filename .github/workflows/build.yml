@@ -35,6 +35,7 @@ jobs:
       run: golangci-lint run ./...
 
     - name: Build
+      working-directory: ./cmd/bot
       run: go build -v .
 
     - name: Test
