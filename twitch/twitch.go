@@ -55,7 +55,9 @@ func (t *Twitch) Close() {
 }
 
 func (t *Twitch) SendMessageToChannel(message string) {
-	t.socket.SendTextMessage(fmt.Sprintf("PRIVMSG #%s :%s", t.ChannelName, message))
+	if len(message) != 0 {
+		t.socket.SendTextMessage(fmt.Sprintf("PRIVMSG #%s :%s", t.ChannelName, message))
+	}
 }
 
 func (t *Twitch) HandleEvent(message string) {
@@ -65,8 +67,10 @@ func (t *Twitch) HandleEvent(message string) {
 	case "$cmd":
 		response = HandleCmd(event, t.db)
 	case "$dice":
-		response = HandleDice()
+		response = HandleDice(event.User)
 	}
 
-	t.SendMessageToChannel(response)
+	if len(response) != 0 {
+		t.SendMessageToChannel(response)
+	}
 }
