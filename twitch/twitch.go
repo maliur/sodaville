@@ -40,9 +40,10 @@ func NewTwitch(logger *log.Logger, botName, channelName, oauth string, db *datab
 }
 
 func (t *Twitch) connectToChannel() {
-	t.socket.SendTextMessage(fmt.Sprintf("PASS oauth:%s", t.OAuth))
-	t.socket.SendTextMessage(fmt.Sprintf("NICK %s", t.BotName))
-	t.socket.SendTextMessage(fmt.Sprintf("JOIN #%s", t.ChannelName))
+	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("PASS oauth:%s", t.OAuth))
+	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("NICK %s", t.BotName))
+	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("JOIN #%s", t.ChannelName))
+	t.SendMessageToChannel("/me booting...")
 }
 
 func (t *Twitch) Connect() {
@@ -51,12 +52,13 @@ func (t *Twitch) Connect() {
 }
 
 func (t *Twitch) Close() {
+	t.SendMessageToChannel("/me shut down")
 	t.socket.Close()
 }
 
 func (t *Twitch) SendMessageToChannel(message string) {
 	if len(message) != 0 {
-		t.socket.SendTextMessage(fmt.Sprintf("PRIVMSG #%s :%s", t.ChannelName, message))
+		t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("PRIVMSG #%s :%s", t.ChannelName, message))
 	}
 }
 
