@@ -65,11 +65,23 @@ func (t *Twitch) SendMessageToChannel(message string) {
 func (t *Twitch) HandleEvent(message string) {
 	var response string
 	event := ParseIRCEvent(message)
+
+	// nothing to do here
+	if len(event.Cmd) == 0 {
+		return
+	}
+
 	switch event.Cmd {
+	// check internal commands first
 	case "$cmd":
 		response = HandleCmd(event, t.db)
 	case "$dice":
 		response = HandleDice(event.User)
+	default:
+		{
+			// if it's not an internal command check the db
+			response = t.db.GetCommandByName(event.Cmd)
+		}
 	}
 
 	if len(response) != 0 {

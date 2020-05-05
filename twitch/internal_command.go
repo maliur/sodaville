@@ -19,13 +19,15 @@ import (
 // 1|name|VARCHAR(25)|1|''|0
 // 2|security|BOOLEAN|1||0
 // 3|response|TEXT|1|''|0
+
 // sqlite> PRAGMA table_info(user);
 // 0|id|INTEGER|1||1
 // 1|name|VARCHAR(25)|1|''|0
 // 2|trusted|BOOLEAN|1||0
 
 func addCmd(event *IRCEvent, db *database.Database) string {
-	// TODO: Add command to DB
+	db.InsertCommand(event.NewCmd, event.Arg, false)
+
 	return fmt.Sprintf("command %s added", event.NewCmd)
 }
 
