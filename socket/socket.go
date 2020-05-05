@@ -68,7 +68,7 @@ func (s *Socket) Connect() {
 					s.Logger.Printf("> %s", message)
 
 					if strings.Contains(message, "PING") {
-						s.SendTextMessage("PONG")
+						s.SendTextMessage("[SOCKET]", "PONG")
 						continue
 					}
 
@@ -81,7 +81,7 @@ func (s *Socket) Connect() {
 	}()
 }
 
-func (s *Socket) SendTextMessage(message string) {
+func (s *Socket) SendTextMessage(prefix, message string) {
 	err := s.send(websocket.TextMessage, []byte(message))
 	if err != nil {
 		s.Logger.Printf("could not send message to twitch: %v", err)
@@ -92,7 +92,11 @@ func (s *Socket) SendTextMessage(message string) {
 		// don't leak the token in the console
 		s.Logger.Printf("< %s", "PASS **************")
 	} else {
-		s.Logger.Printf("< %s", message)
+		if len(prefix) > 0 {
+			prefix = prefix + " "
+		}
+
+		s.Logger.Printf("%s< %s", prefix, message)
 	}
 }
 
