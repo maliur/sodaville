@@ -19,13 +19,12 @@ func main() {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 
 	logger.Println("[BOOT] connecting to database")
-	conn, err := sql.Open("sqlite3", "./sodaville.db")
+	dbConn, err := sql.Open("sqlite3", "./sodaville.db")
 	if err != nil {
 		logger.Fatalf("[BOOT] could not connect to database: %v", err)
 	}
-	defer conn.Close()
 
-	db := database.NewDatabase(logger, conn)
+	db := database.NewDatabase(logger, dbConn)
 	chat := twitch.NewTwitch(logger, botName, channelName, oauth, db)
 
 	interrupt := make(chan os.Signal, 1)
@@ -36,7 +35,8 @@ func main() {
 
 	for {
 		<-interrupt
-		log.Println("interrupt")
+		logger.Println("interrupt")
+		dbConn.Close()
 		chat.Close()
 		return
 	}
