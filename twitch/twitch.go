@@ -44,7 +44,8 @@ func (t *TwitchBot) parseRawMessage(raw string) {
 	switch event.Cmd {
 	// check internal commands first
 	case "dice":
-		response = HandleDice(event.User)
+		t.MentionUser(event.User, HandleDice())
+		return
 	case "cmd":
 		response, err = HandleCmd(event, t.config.DB)
 	default:
@@ -75,7 +76,7 @@ func (t *TwitchBot) Connect() {
 	t.client.WriteMessage(fmt.Sprintf("NICK %s", t.config.BotName))
 	t.client.WriteMessage(fmt.Sprintf("JOIN #%s", t.config.ChannelName))
 
-	t.SendMessageToChannel("/me hello")
+	t.SendMessageToChannel("/me booting up..")
 
 	t.client.Run()
 }
@@ -92,9 +93,10 @@ func (t *TwitchBot) SendMessageToChannel(message string) {
 }
 
 func (t *TwitchBot) WhisperUser(user, message string) {
-	// TODO: Not implemented
+	// TODO: Implement whisper user
+	// t.client.WriteMessage(fmt.Sprintf("PRIVMSG #%s :/w %s %s", t.config.ChannelName, user, message))
 }
 
 func (t *TwitchBot) MentionUser(user, message string) {
-	// TODO: Not implemented
+	t.client.WriteMessage(fmt.Sprintf("PRIVMSG #%s :@%s %s", t.config.ChannelName, user, message))
 }

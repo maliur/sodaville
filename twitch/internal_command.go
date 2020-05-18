@@ -35,9 +35,9 @@ func delCmd(event *IRCEvent, db *database.Database) (string, error) {
 	return fmt.Sprintf("command %s deleted", event.NewCmd), nil
 }
 
-func HandleDice(user string) string {
+func HandleDice() string {
 	rand.Seed(time.Now().UnixNano())
-	return fmt.Sprintf("@%s %d", user, rand.Intn(100))
+	return fmt.Sprintf("%d", rand.Intn(100))
 }
 
 func HandleCmd(event *IRCEvent, db *database.Database) (string, error) {
