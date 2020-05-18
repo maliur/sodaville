@@ -1,10 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"log"
+	"net"
 	"os"
-	"os/signal"
 
 	"github.com/maliur/sodaville/database"
 	"github.com/maliur/sodaville/twitch"
@@ -16,28 +15,25 @@ func main() {
 	botName := os.Getenv("BOT_USERNAME")
 	channelName := os.Getenv("CHANNEL_NAME")
 
-	logger := log.New(os.Stdout, "", log.LstdFlags)
-
-	logger.Println("[BOOT] connecting to database")
-	dbConn, err := sql.Open("sqlite3", "./sodaville.db")
+	conn, err := net.Dial("tcp", "irc.chat.twitch.tv:6667")
 	if err != nil {
-		logger.Fatalf("[BOOT] could not connect to database: %v", err)
+		log.Fatalf("could not connect to irc twitch: %v", err)
 	}
 
-	db := database.NewDatabase(logger, dbConn)
-	chat := twitch.NewTwitch(logger, botName, channelName, oauth, db)
-
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	logger.Println("[BOOT] connecting to twitch chat")
-	chat.Connect()
-
-	for {
-		<-interrupt
-		logger.Println("interrupt")
-		dbConn.Close()
-		chat.Close()
-		return
+	db, err := database.OpenDB("./sodaville.db")
+	if err != nil {
+		log.Fatalf("failed to open database: %v", err)
 	}
+
+	config := &twitch.TwitchBotConfig{
+		OAuth:            oauth,
+		BotName:          botName,
+		BotCommandPrefix: "$",
+		ChannelName:      channelName,
+		Debug:            true,
+		DB:               db,
+	}
+
+	t := twitch.NewTwitchBot(config, conn)
+	t.Connect()
 }

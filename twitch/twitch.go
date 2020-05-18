@@ -3,68 +3,33 @@ package twitch
 import (
 	"fmt"
 	"log"
+	"net"
+	"os"
 
 	"github.com/maliur/sodaville/database"
-	"github.com/maliur/sodaville/socket"
+	"github.com/maliur/sodaville/irc"
+	"github.com/maliur/sodaville/logger"
 )
 
-type Twitch struct {
-	BotName     string
-	ChannelName string
-	OAuth       string
-	logger      *log.Logger
-	socket      *socket.Socket
-	db          *database.Database
+type TwitchBotConfig struct {
+	OAuth            string
+	BotName          string
+	BotCommandPrefix string
+	ChannelName      string
+	Debug            bool
+	DB               *database.Database
 }
 
-func NewTwitch(logger *log.Logger, botName, channelName, oauth string, db *database.Database) *Twitch {
-	twitch := &Twitch{
-		botName,
-		channelName,
-		oauth,
-		logger,
-		nil,
-		db,
-	}
-
-	url := "ws://irc-ws.chat.twitch.tv:80"
-	s := socket.NewSocket(
-		logger,
-		url,
-		twitch.HandleEvent,
-	)
-
-	twitch.socket = s
-
-	return twitch
+type TwitchBot struct {
+	config *TwitchBotConfig
+	client *irc.Client
 }
 
-func (t *Twitch) connectToChannel() {
-	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("PASS oauth:%s", t.OAuth))
-	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("NICK %s", t.BotName))
-	t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("JOIN #%s", t.ChannelName))
-	t.SendMessageToChannel("/me booting...")
-}
-
-func (t *Twitch) Connect() {
-	t.socket.Connect()
-	t.connectToChannel()
-}
-
-func (t *Twitch) Close() {
-	t.SendMessageToChannel("/me shut down")
-	t.socket.Close()
-}
-
-func (t *Twitch) SendMessageToChannel(message string) {
-	if len(message) != 0 {
-		t.socket.SendTextMessage("[TWITCH]", fmt.Sprintf("PRIVMSG #%s :%s", t.ChannelName, message))
-	}
-}
-
-func (t *Twitch) HandleEvent(message string) {
+func (t *TwitchBot) parseRawMessage(raw string) {
 	var response string
-	event := ParseIRCEvent(message)
+	var err error
+
+	event := ParseIRCEvent(raw, t.config.BotCommandPrefix)
 
 	// nothing to do here
 	if len(event.Cmd) == 0 {
@@ -73,18 +38,58 @@ func (t *Twitch) HandleEvent(message string) {
 
 	switch event.Cmd {
 	// check internal commands first
-	case "$cmd":
-		response = HandleCmd(event, t.db)
-	case "$dice":
+	case "dice":
 		response = HandleDice(event.User)
+	case "cmd":
+		response, err = HandleCmd(event, t.config.DB)
 	default:
-		{
-			// if it's not an internal command check the db
-			response = t.db.GetCommandByName(event.Cmd)
-		}
+		// if it's not an internal command check the db
+		fmt.Println(event)
+		response, err = t.config.DB.GetCommandByName(event.Cmd)
+	}
+
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
 	if len(response) != 0 {
 		t.SendMessageToChannel(response)
 	}
+}
+
+func NewTwitchBot(config *TwitchBotConfig, conn net.Conn) *TwitchBot {
+	logger := logger.NewSlogger(log.New(os.Stdout, "", log.LstdFlags))
+	t := &TwitchBot{config, nil}
+	t.client = irc.NewClient(logger, conn, config.Debug, t.parseRawMessage)
+	return t
+}
+
+func (t *TwitchBot) Connect() {
+	t.client.WriteMessage(fmt.Sprintf("PASS oauth:%s", t.config.OAuth))
+	t.client.WriteMessage(fmt.Sprintf("NICK %s", t.config.BotName))
+	t.client.WriteMessage(fmt.Sprintf("JOIN #%s", t.config.ChannelName))
+
+	t.SendMessageToChannel("/me hello")
+
+	t.client.Run()
+}
+
+func (t *TwitchBot) Disconnect() {
+	t.client.WriteMessage("/me intializing self destruction")
+	t.client.WriteMessage("/me BOOM")
+	t.client.WriteMessage(fmt.Sprintf("PART #%s", t.config.ChannelName))
+	t.config.DB.Close()
+}
+
+func (t *TwitchBot) SendMessageToChannel(message string) {
+	t.client.WriteMessage(fmt.Sprintf("PRIVMSG #%s :%s", t.config.ChannelName, message))
+}
+
+func (t *TwitchBot) WhisperUser(user, message string) {
+	// TODO: Not implemented
+}
+
+func (t *TwitchBot) MentionUser(user, message string) {
+	// TODO: Not implemented
 }

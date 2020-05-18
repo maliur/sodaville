@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS "command" (
 	id INTEGER NOT NULL,
-	name VARCHAR(25) NOT NULL DEFAULT '',
+    name VARCHAR(25) NOT NULL DEFAULT '',
 	security BOOLEAN NOT NULL CHECK (security IN (0,1)),
 	response TEXT NOT NULL DEFAULT '',
 	PRIMARY KEY (id)
+	UNIQUE(name)
 );
 
 CREATE TABLE IF NOT EXISTS "user" (
@@ -11,4 +12,5 @@ CREATE TABLE IF NOT EXISTS "user" (
 	name VARCHAR(25) NOT NULL DEFAULT '',
 	trusted BOOLEAN NOT NULL CHECK (trusted IN (0,1)),
 	PRIMARY KEY (id)
+	UNIQUE(name)
 );

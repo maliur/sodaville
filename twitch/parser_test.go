@@ -29,11 +29,27 @@ func TestCmdFromMessage(t *testing.T) {
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$helloWorld", ""},
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$HeLlo", ""},
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$hello-world", ""},
-		{":maliur!maliur@maliur.tmi.twitch.tv PRIVMSG #maliur :$hello", "$hello"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$hello", "$hello"},
 	}
 
 	for _, m := range messages {
-		got := cmdFromMessage(m.message)
+		got := cmdFromMessage(m.message, "$")
+		if got != m.expected {
+			t.Errorf("cmdFromMessage(\"%s\") = %s; want %s", m.message, got, m.expected)
+		}
+	}
+}
+
+func TestNewCmdFromMessage(t *testing.T) {
+	messages := []struct {
+		message  string
+		expected string
+	}{
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add hello Hello, World!", "hello"},
+	}
+
+	for _, m := range messages {
+		got := newCmdFromMessage(m.message, "$")
 		if got != m.expected {
 			t.Errorf("cmdFromMessage(\"%s\") = %s; want %s", m.message, got, m.expected)
 		}
@@ -45,15 +61,16 @@ func TestActionFromMessage(t *testing.T) {
 		message  string
 		expected string
 	}{
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add $yolo", "add"},
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd del $yolo", "del"},
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add $yolo You only live once", "add"},
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd ADD $yolo", ""},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add yolo", "add"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd del yolo", "del"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add yolo You only live once", "add"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd ADD yolo", ""},
 		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add", ""},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd ls", "ls"},
 	}
 
 	for _, m := range messages {
-		got := actionFromMessage(m.message)
+		got := actionFromMessage(m.message, "$")
 		if got != m.expected {
 			t.Errorf("actionFromMessage(\"%s\") = %s; want %s", m.message, got, m.expected)
 		}
@@ -65,13 +82,13 @@ func TestArgFromMessage(t *testing.T) {
 		message  string
 		expected string
 	}{
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add $yolo You only live once", "You only live once"},
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd del $yolo Hello, World", "Hello, World"},
-		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd ADD $yolo Hello, World", ""},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd add yolo You only live once", "You only live once"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd del yolo Hello, World", "Hello, World"},
+		{":john!john@john.tmi.twitch.tv PRIVMSG #sodaville :$cmd ADD yolo Hello, World", ""},
 	}
 
 	for _, m := range messages {
-		got := argFromMessage(m.message)
+		got := argFromMessage(m.message, "$")
 		if got != m.expected {
 			t.Errorf("argFromMessage(\"%s\") = %s; want %s", m.message, got, m.expected)
 		}

@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -13,16 +14,20 @@ type IRCEvent struct {
 	Arg    string
 }
 
-func cmdFromMessage(message string) string {
-	cmdRegex := regexp.MustCompile(`:\$\b[a-z]+(\b$|\s)`)
+func cmdFromMessage(message, prefix string) string {
+	cmdRegex := regexp.MustCompile(fmt.Sprintf(`:\%s\b[a-z]+(\b$|\s)`, prefix))
 	match := cmdRegex.FindString(message)
 	return strings.TrimSpace(strings.TrimPrefix(match, ":"))
 }
 
-func newCmdFromMessage(message string) string {
-	cmdRegex := regexp.MustCompile(`[^:]\$\b[a-z]+(\b$|\s)`)
-	match := cmdRegex.FindString(message)
-	return strings.TrimSpace(match)
+func newCmdFromMessage(message, prefix string) string {
+	cmdRegex := regexp.MustCompile(fmt.Sprintf(`:\%s[a-z]+\s([a-z]+\s[a-z]+|ls)`, prefix))
+	parts := strings.Split(cmdRegex.FindString(message), " ")
+	if len(parts) == 3 {
+		return parts[2]
+	}
+
+	return ""
 }
 
 func userFromMessage(message string) string {
@@ -30,18 +35,18 @@ func userFromMessage(message string) string {
 	return strings.TrimPrefix(userRegex.FindString(message), "@")
 }
 
-func actionFromMessage(message string) string {
-	actionRegex := regexp.MustCompile(`:\$[a-z]+\s[a-z]+\s\$[a-z]+`)
+func actionFromMessage(message, prefix string) string {
+	actionRegex := regexp.MustCompile(fmt.Sprintf(`:\%s[a-z]+\s([a-z]+\s[a-z]+|ls)`, prefix))
 	parts := strings.Split(actionRegex.FindString(message), " ")
-	if len(parts) >= 3 {
+	if len(parts) >= 2 {
 		return parts[1]
 	}
 
 	return ""
 }
 
-func argFromMessage(message string) string {
-	actionRegex := regexp.MustCompile(`:\$[a-z]+\s[a-z]+\s\$\w+\s.*`)
+func argFromMessage(message, prefix string) string {
+	actionRegex := regexp.MustCompile(fmt.Sprintf(`:\%s[a-z]+\s[a-z]+\s\w+\s.*`, prefix))
 	parts := strings.Split(actionRegex.FindString(message), " ")
 	if len(parts) > 3 {
 		return strings.Join(parts[3:], " ")
@@ -50,12 +55,12 @@ func argFromMessage(message string) string {
 	return ""
 }
 
-func ParseIRCEvent(message string) *IRCEvent {
+func ParseIRCEvent(message, prefix string) *IRCEvent {
 	return &IRCEvent{
 		User:   userFromMessage(message),
-		Cmd:    cmdFromMessage(message),
-		NewCmd: newCmdFromMessage(message),
-		Action: actionFromMessage(message),
-		Arg:    argFromMessage(message),
+		Cmd:    strings.TrimPrefix(cmdFromMessage(message, prefix), prefix),
+		NewCmd: newCmdFromMessage(message, prefix),
+		Action: actionFromMessage(message, prefix),
+		Arg:    argFromMessage(message, prefix),
 	}
 }

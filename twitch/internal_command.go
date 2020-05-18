@@ -8,32 +8,31 @@ import (
 	"github.com/maliur/sodaville/database"
 )
 
-// type InternalCommand struct {
-// 	security bool
-// 	name     string
-// 	execute  func(message string) (string, error)
-// }
+func lsCmd(event *IRCEvent, db *database.Database) (string, error) {
+	msg, err := db.GetAllCommands()
+	if err != nil {
+		return "", err
+	}
 
-// sqlite> PRAGMA table_info(command);
-// 0|id|INTEGER|1||1
-// 1|name|VARCHAR(25)|1|''|0
-// 2|security|BOOLEAN|1||0
-// 3|response|TEXT|1|''|0
-
-// sqlite> PRAGMA table_info(user);
-// 0|id|INTEGER|1||1
-// 1|name|VARCHAR(25)|1|''|0
-// 2|trusted|BOOLEAN|1||0
-
-func addCmd(event *IRCEvent, db *database.Database) string {
-	db.InsertCommand(event.NewCmd, event.Arg, false)
-
-	return fmt.Sprintf("command %s added", event.NewCmd)
+	return msg, nil
 }
 
-func delCmd(event *IRCEvent, db *database.Database) string {
-	// TODO: Remove command from DB
-	return fmt.Sprintf("command %s deleted", event.Cmd)
+func addCmd(event *IRCEvent, db *database.Database) (string, error) {
+	err := db.InsertCommand(event.NewCmd, event.Arg, false)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("command %s added", event.NewCmd), nil
+}
+
+func delCmd(event *IRCEvent, db *database.Database) (string, error) {
+	err := db.DeleteCommand(event.NewCmd)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("command %s deleted", event.NewCmd), nil
 }
 
 func HandleDice(user string) string {
@@ -41,13 +40,14 @@ func HandleDice(user string) string {
 	return fmt.Sprintf("@%s %d", user, rand.Intn(100))
 }
 
-func HandleCmd(event *IRCEvent, db *database.Database) string {
+func HandleCmd(event *IRCEvent, db *database.Database) (string, error) {
 	switch event.Action {
+	case "ls":
+		return lsCmd(event, db)
 	case "add":
 		return addCmd(event, db)
 	case "del":
 		return delCmd(event, db)
 	}
-
-	return "use this format to add or delete a command: $cmd <add|del> $command_name <text for add command if applicable>"
+	return "$cmd <action ls|add|del> <command name if add|del> <response for add command if applicable>", nil
 }
