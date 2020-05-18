@@ -79,9 +79,6 @@ func (c *Client) startReadLoop(wg *sync.WaitGroup) {
 		if c.Debug {
 			c.logger.Info("> " + line)
 		}
-		if strings.Contains(line, "PING") {
-			c.WriteMessage("PONG :tmi.twitch.tv")
-		}
 
 		c.OnMessageFunc(line)
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/maliur/sodaville/database"
 	"github.com/maliur/sodaville/irc"
@@ -28,6 +29,10 @@ type TwitchBot struct {
 func (t *TwitchBot) parseRawMessage(raw string) {
 	var response string
 	var err error
+
+	if strings.Contains(raw, "PING") {
+		t.client.WriteMessage("PONG :tmi.twitch.tv")
+	}
 
 	event := ParseIRCEvent(raw, t.config.BotCommandPrefix)
 
