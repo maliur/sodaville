@@ -7,7 +7,6 @@ import (
 
 	"github.com/maliur/sodaville/database"
 	"github.com/maliur/sodaville/twitch"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
