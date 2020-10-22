@@ -93,5 +93,5 @@ func (db *Database) GetAllCommands() (string, error) {
 func (db *Database) Close() error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	return db.Close()
+	return db.conn.Close()
 }
