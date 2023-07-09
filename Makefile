@@ -1,5 +1,8 @@
 run:
-	go build -o sodaville cmd/bot/main.go && ./sodaville
+	CGO_ENABLED=1 go build -o sodaville cmd/bot/main.go && ./sodaville
+
+build:
+	CGO_ENABLED=1 go build -o sodaville cmd/bot/main.go
 
 test:
 	go test ./...
